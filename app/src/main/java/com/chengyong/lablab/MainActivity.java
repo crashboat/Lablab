@@ -9,11 +9,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.View;
+import android.util.Log;
+import java.util.Random;
+import android.widget.TextView;
 
 import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
+
+Random random = new Random();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Log.i("Activity Lifecycle","onCreate");
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -33,10 +39,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i("Activity Lifecycle", "onPause");
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
+    }
+
+    private String getCoinToss(){
+        if(random.nextBoolean()){
+            return getString(R.string.coinTossResult1);
+        }
+        return getString(R.string.coinTossResult2);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i("Activity Lifecycle","onResume");
+        TextView coinTossView = (TextView) findViewById(R.id.coinTossView1);
+        String result = getCoinToss();
+        coinTossView.setText(result);
     }
 
     @Override
