@@ -1,87 +1,57 @@
 package com.chengyong.lablab;
 
-import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 
-import android.view.View;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
 import android.util.Log;
-import java.util.Random;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Toast;
 
-import android.view.Menu;
-import android.view.MenuItem;
+import static android.net.Uri.parse;
 
 public class MainActivity extends AppCompatActivity {
 
-Random random = new Random();
+    static final int REQUEST_DIALOG_RESPONSE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        Log.i("Activity Lifecycle","onCreate");
+    }
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+    public void openCoinToss(View view){
+        Intent openCoinTossIntent= new Intent(getApplicationContext(), CoinTossActivity.class);
+        openCoinTossIntent.putExtra("extraName","extra information");
+//        startActivity(openCoinTossIntent);
+        startActivityForResult(openCoinTossIntent,REQUEST_DIALOG_RESPONSE);
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        Log.i("Activity Lifecycle","onActivityResult");
+        super.onActivityResult(requestCode,resultCode,data);
+      if(resultCode == RESULT_OK && requestCode == REQUEST_DIALOG_RESPONSE){
+          Log.i("Activity Lifecycle","inresult ok");
+          String responseString = data.getExtras().getString("ResponseString");
+          Toast.makeText(getApplicationContext(), "This is response:"+responseString, Toast.LENGTH_LONG).show();
+      }
+    }
+
+
     protected void onPause() {
         super.onPause();
-        Log.i("Activity Lifecycle", "onPause");
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+    public void openURL(View view){
+        Intent openImplicitIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.co.uk"));
+        startActivity(openImplicitIntent);
     }
 
-    private String getCoinToss(){
-        if(random.nextBoolean()){
-            return getString(R.string.coinTossResult1);
-        }
-        return getString(R.string.coinTossResult2);
+    public void openList(View view){
+        Intent openListIntent = new Intent(getApplicationContext(), ListActivity.class);
+        startActivity(openListIntent);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.i("Activity Lifecycle","onResume");
-        TextView coinTossView = (TextView) findViewById(R.id.coinTossView1);
-        String result = getCoinToss();
-        coinTossView.setText(result);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-
-
-
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
 }
