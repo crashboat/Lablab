@@ -2,7 +2,10 @@ package com.chengyong.lablab;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,10 +25,13 @@ public class ListItemFragment extends Fragment {
     private static final String ARG_INDEX = "index";
 
 
+
     // TODO: Rename and change types of parameters
 //    private String mParam1;
 //    private String mParam2;
     private int mIndex;
+    MyViewModel myViewModel;
+    View mInflatedView;
 
     public int getShownIndex(){
         return mIndex;
@@ -60,6 +66,8 @@ public class ListItemFragment extends Fragment {
             mIndex = getArguments().getInt(ARG_INDEX);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        myViewModel = new ViewModelProvider(getActivity()).get(MyViewModel.class);
+        myViewModel.selectItem(mIndex);
     }
 
     @Override
@@ -69,10 +77,21 @@ public class ListItemFragment extends Fragment {
     ) {
         // Inflate the layout for this fragment
         Log.i(this.getClass().getSimpleName()+"Observer", "onCreateView");
-        View inflatedView = inflater.inflate(R.layout.fragment_list_item,container, false);
-        TextView text = (TextView)inflatedView.findViewById(R.id.listItemTextView);
-        text.setText(DummyData.DATA_CONTENT[mIndex]);
-        return inflatedView;
+        mInflatedView = inflater.inflate(R.layout.fragment_list_item,container, false);
+
+        final Observer<Item> itemObserver = new Observer<Item>(){
+            @Override
+            public void onChanged(@NonNull final Item item){
+                TextView text = (TextView)mInflatedView.findViewById(R.id.listItemTextView);
+                text.setText(item.getDescription());;
+            }
+        };
+
+        myViewModel.getSelectedItem().observe(getViewLifecycleOwner(),itemObserver);
+
+     //   TextView text = (TextView)inflatedView.findViewById(R.id.listItemTextView);
+       // text.setText(DummyData.DATA_CONTENT[mIndex]);
+        return mInflatedView;
     }
 
 //    @Override
