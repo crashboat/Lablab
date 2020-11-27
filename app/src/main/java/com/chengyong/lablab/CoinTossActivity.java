@@ -1,6 +1,8 @@
 package com.chengyong.lablab;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -38,6 +40,18 @@ Random random = new Random();
                         .setAction("Action", null).show();
             }
         });
+
+        int numberOfTosses = retrievePreviousTosses();
+        if(numberOfTosses == -1){
+            numberOfTosses = 1;
+        }
+        else {
+            numberOfTosses++;
+        }
+        Toast.makeText(getApplicationContext(),"The conin has been tossed: "+numberOfTosses+" times.",Toast.LENGTH_LONG).show();
+
+        storePreviousTosses(numberOfTosses);
+
     }
 
     @Override
@@ -103,7 +117,22 @@ Random random = new Random();
         return super.onOptionsItemSelected(item);
     }
 
+    private void storePreviousTosses(int pNumberOfTosses){
+        SharedPreferences sharedPreferences = getApplication().getSharedPreferences(
+                "com.chengyong.lablab",
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("numberOfTosses",pNumberOfTosses);
+        editor.commit();
+    }
 
+    private int retrievePreviousTosses(){
+        int previousTosses = 0;
+        SharedPreferences sharedPreferences = this.getApplication().getSharedPreferences(
+                "com.chengyong.lablab",Context.MODE_PRIVATE);
+        previousTosses = sharedPreferences.getInt("numberOfTosses",01);
+        return previousTosses;
+    }
 
 
 

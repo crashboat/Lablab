@@ -2,11 +2,16 @@ package com.chengyong.lablab;
 
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Log;
 import android.widget.ImageView;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Transformations;
 
@@ -22,17 +27,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.Buffer;
 import java.util.ArrayList;
 
 public class ItemsRepository {
     private static ItemsRepository sItemsRepository;
 
     private Context mApplicationContext;
-    private LiveData<ArrayList<Item>> mItems;
+//    private LiveData<ArrayList<Item>> mItems;
+    private MediatorLiveData<ArrayList<Item>> mItems;
     private LiveData<Item>mSelectedItem;
 
     private ItemsRepository(Context pApplicationContext){
         this.mApplicationContext = pApplicationContext;
+        mItems = new MediatorLiveData<>();
     }
 
     public static ItemsRepository getInstance(Context pApplicationContext){
@@ -54,9 +71,10 @@ public class ItemsRepository {
             new Response.Listener<JSONObject>(){
                 @Override
                 public void onResponse(JSONObject response) {
+                    saveIndexLocality(response,"index.json");
                     ArrayList<Item> items = parseJSONResponse(response);
                     mutableItems.setValue(items);
-                    mItems = mutableItems;
+//                    mItems = mutableItems;
                     Log.i("Activity Lifecycle","loadItemsFromJSON, onresponse");
                 }
                 },
@@ -100,18 +118,32 @@ public class ItemsRepository {
     }
 
     public LiveData<ArrayList<Item>>getItems(){
-        if(mItems==null){
-            mItems = loadItemsFromJSON();
-        }
+
+        LiveData<ArrayList<Item>> remoteData = loadItemsFromJSON();
+        LiveData<ArrayList<Item>> localData = loadIndexLocally("index.json");
+        mItems.addSource(remoteData,value->mItems.setValue(value));
+        mItems.addSource(localData,value->mItems.setValue(value));
+
+//        if(mItems==null){
+//            mItems = loadItemsFromJSON();
+//        }
         return mItems;
     }
 
     public LiveData<Item>getItem(int pItemIndex){
+        Log.i("Activity Lifecycle","loadItemsFromJSON, getItems");
         LiveData<Item>transformedItem = Transformations.switchMap(mItems,items->{
             MutableLiveData<Item> itemData = new MutableLiveData<>();
             Item item = items.get(pItemIndex);
             itemData.setValue(item);
-            loadImage(item.getImageUrl(),itemData);
+                Log.i("Activity Lifecycle","getItems ok");
+            if(!loadImageLocally(Uri.parse(item.getImageUrl()).getLastPathSegment(), itemData)) {
+                                Log.i("Activity Lifecycle","from internet ok");
+                loadImage(item.getImageUrl(), itemData);
+                Log.i("Activity Lifecycle","from internet -------- ");
+
+            }
+
             return itemData;
         });
         mSelectedItem = transformedItem;
@@ -127,6 +159,7 @@ public class ItemsRepository {
             public void onResponse(Bitmap bitmap){
                 Item item = mutableItem.getValue();
                 item.setImage(bitmap);
+                saveImageLocality(bitmap, Uri.parse(pUrl).getLastPathSegment());
                 mutableItem.setValue(item);
             }
         },
@@ -141,6 +174,100 @@ public class ItemsRepository {
         });
         queue.add(imageRequest);
     }
+
+    public void saveIndexLocality(JSONObject pIndexObject, String pFilename){
+        ContextWrapper contextWrapper = new ContextWrapper(mApplicationContext);
+        OutputStreamWriter outputStreamWriter = null;
+        try{
+            outputStreamWriter = new OutputStreamWriter(
+                    contextWrapper.openFileOutput(pFilename,Context.MODE_PRIVATE));
+            outputStreamWriter.write(pIndexObject.toString());
+            outputStreamWriter.flush();
+            outputStreamWriter.close();
+        }catch(java.io.IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private LiveData<ArrayList<Item>> loadIndexLocally(String pFilename) {
+
+        JSONObject indexObject = null;
+        MutableLiveData<ArrayList<Item>>mutableItem = new MutableLiveData<ArrayList<Item>>();
+
+        try {
+            InputStream is = mApplicationContext.openFileInput(pFilename);
+            if (is != null) {
+                InputStreamReader isr = new InputStreamReader(is);
+                BufferedReader bufferedReader = new BufferedReader(isr);
+
+                String receiveString ="";
+                StringBuilder stringBuilder = new StringBuilder();
+                while ((receiveString  = bufferedReader.readLine()) != null) {
+                    stringBuilder.append(receiveString);
+
+                }
+                is.close();
+                String builtString = stringBuilder.toString();
+                indexObject = new JSONObject(builtString);
+            }
+        }
+        catch (FileNotFoundException e) {Log.e("JSONLoading", "File not found"+e.toString());}
+        catch(IOException e){ Log.e("JSONLoading", "Can not read file"+e.toString()); }
+        catch(JSONException e){ Log.e("JSONLoading", "json error"+e.toString()); }
+        if(indexObject!=null){
+            ArrayList<Item> items = parseJSONResponse((indexObject));
+            mutableItem.setValue(items);
+        }
+        return mutableItem;
+    }
+
+    private boolean loadImageLocally(String pFilename, MutableLiveData<Item> pItemData) {
+
+        boolean  loaded = false;
+        ContextWrapper contextWrapper = new ContextWrapper(mApplicationContext);
+        File directory = contextWrapper.getDir("itemImages", Context.MODE_PRIVATE);
+        File file = new File(directory,pFilename);
+
+        if(file.exists()){
+            FileInputStream fileInputStream = null;
+
+        try {
+
+            fileInputStream = new FileInputStream(file);
+            Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
+            Item item = pItemData.getValue();
+            item.setImage(bitmap);
+            pItemData.setValue(item);
+
+            fileInputStream.close();
+            loaded = true;
+
+        }
+        catch (java.io.IOException e) {e.printStackTrace();}
+
+
+    }
+        return loaded;
+    }
+
+    public void saveImageLocality(Bitmap pBitmap, String pFilename){
+        ContextWrapper contextWrapper = new ContextWrapper(mApplicationContext);
+        File directory = contextWrapper.getDir("itemImages", Context.MODE_PRIVATE);
+        File file = new File(directory, pFilename);
+        if(!file.exists()){
+        FileOutputStream fileOutputStream = null;
+        try{
+            fileOutputStream = new FileOutputStream(file);
+            pBitmap.compress(Bitmap.CompressFormat.PNG,100,fileOutputStream);
+            fileOutputStream.flush();
+            fileOutputStream.close();
+
+        }catch(java.io.IOException e){
+            e.printStackTrace();
+        }
+    }
+    }
+
 
 }
 
