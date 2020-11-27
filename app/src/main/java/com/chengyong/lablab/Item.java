@@ -1,11 +1,15 @@
 package com.chengyong.lablab;
 
+import android.graphics.Bitmap;
+
 public class Item {
 
     private String mTitle;
     private String mLink;
     private String mDate;
     private String mDescription;
+    private String mImageUrl;
+    private Bitmap mImage;
 
     public Item(String pTitle, String pLink, String pDate, String pDescription){
         setTitle(pTitle);
@@ -14,6 +18,10 @@ public class Item {
         setDescription(pDescription);
     }
 
+    public Bitmap getImage() {return mImage; }
+    public void setImage(Bitmap pImage) {mImage = pImage;}
+    public String getImageUrl(){return mImageUrl;}
+    public void setImageUrl(String pImageUrl){mImageUrl = pImageUrl;}
     public String getTitle(){return mTitle;}
     public void setTitle(String pTitle){mTitle = pTitle;}
     public String getDate(){return mDate;}

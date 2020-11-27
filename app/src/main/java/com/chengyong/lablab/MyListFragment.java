@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -23,10 +24,15 @@ public class MyListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceSatte){
         super.onCreate(savedInstanceSatte);
         mViewModel = new ViewModelProvider(getActivity()).get(MyViewModel.class);
+
+        Log.i("Activity Lifecycle","MyLISTFragment on create");
+
         final Observer<List<Item>> itemObserver = new Observer<List<Item>>(){
+
             @Override
             public void onChanged(@NonNull final List<Item>items){
-                ItemAdaptor itemAdaptor = new ItemAdaptor(getActivity(),mViewModel.getItems().getValue());
+                Log.i("Activity Lifecycle","MyLISTFragment on changed");
+                ItemAdaptor itemAdaptor = new ItemAdaptor(getActivity(), mViewModel.getItems().getValue());
                 setListAdapter(itemAdaptor);
             }
         };
@@ -39,7 +45,7 @@ public class MyListFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceSatte){
         super.onActivityCreated(savedInstanceSatte);
-
+        Log.i("Activity Lifecycle","MyLISTFragment on onActivityCreated");
         setListAdapter(new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_activated_1,DummyData.DATA_HEADINGS));
 
         getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
@@ -50,12 +56,15 @@ public class MyListFragment extends ListFragment {
 
         if(savedInstanceSatte!=null){
             mCurCheckPosition = savedInstanceSatte.getInt("curChoice",0);
+
         }
         if(mSingleActivity){
             showContent(mCurCheckPosition);
+            Log.i("Activity Lifecycle","MyLISTFragment on onactivitycreated, mSingleActivity");
         }
         else{
             getListView().setItemChecked(mCurCheckPosition,true);
+            Log.i("Activity Lifecycle","MyLISTFragment on onactivitycreated itemlist activity");
         }
 
     }
@@ -75,12 +84,14 @@ public class MyListFragment extends ListFragment {
     void showContent(int index){
 
         mCurCheckPosition = index;
-
+        Log.i("Activity Lifecycle","MyLISTFragment showcontent ");
        if(mSingleActivity){
+           Log.i("Activity Lifecycle","MyLISTFragment showcontent singleActivite true");
            getListView().setItemChecked(index, true);
            ListItemFragment content = (ListItemFragment)getFragmentManager()
                    .findFragmentById(R.id.content);
            if(content==null || content.getShownIndex()!=index){
+               Log.i("Activity Lifecycle","MyLISTFragment showcontent content null");
                content = ListItemFragment.newInstance(index);
                FragmentTransaction ft = getFragmentManager().beginTransaction();
 //               FragmentTransaction ft = getChildFragmentManager().beginTransaction();  // this statement will cause crash in landscape mode
@@ -90,6 +101,7 @@ public class MyListFragment extends ListFragment {
            }
        }
        else{
+           Log.i("Activity Lifecycle","MyLISTFragment showcontent singleactivity false ");
         Intent intent = new Intent();
 
         intent.setClass(getActivity(),ItemActivity.class);
