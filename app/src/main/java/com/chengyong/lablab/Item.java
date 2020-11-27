@@ -11,6 +11,14 @@ public class Item {
     private String mImageUrl;
     private Bitmap mImage;
 
+    public Item(String pTitle, String pLink, String pDate, String pDescription, String pImageUrl){
+        setTitle(pTitle);
+        setLink(pLink);
+        setDate(pDate);
+        setDescription(pDescription);
+        setImageUrl(pImageUrl);
+    }
+
     public Item(String pTitle, String pLink, String pDate, String pDescription){
         setTitle(pTitle);
         setLink(pLink);

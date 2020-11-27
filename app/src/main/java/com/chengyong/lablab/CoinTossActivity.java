@@ -3,8 +3,10 @@ package com.chengyong.lablab;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
+import com.android.volley.VolleyError;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -133,7 +135,6 @@ Random random = new Random();
         previousTosses = sharedPreferences.getInt("numberOfTosses",01);
         return previousTosses;
     }
-
 
 
 }

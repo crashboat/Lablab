@@ -47,9 +47,14 @@ public class ItemsRepository {
     private MediatorLiveData<ArrayList<Item>> mItems;
     private LiveData<Item>mSelectedItem;
 
+    private VolleyItemListRetriever mRemoteItemList;
+
+
     private ItemsRepository(Context pApplicationContext){
+        Log.i("ItemsRepository","constructor");
         this.mApplicationContext = pApplicationContext;
         mItems = new MediatorLiveData<>();
+        mRemoteItemList = new VolleyItemListRetriever("https://goparker.com/600096/index.json",pApplicationContext);
     }
 
     public static ItemsRepository getInstance(Context pApplicationContext){
@@ -60,6 +65,7 @@ public class ItemsRepository {
     }
 
     public LiveData<ArrayList<Item>>loadItemsFromJSON(){
+        Log.i("ItemsRepository","loadItemsFromJSON");
         RequestQueue queue = Volley.newRequestQueue(mApplicationContext);
         String url =  "https://www.goparker.com/600096/index.json";
         final MutableLiveData<ArrayList<Item>>mutableItems = new MutableLiveData<>();
@@ -118,11 +124,14 @@ public class ItemsRepository {
     }
 
     public LiveData<ArrayList<Item>>getItems(){
-
-        LiveData<ArrayList<Item>> remoteData = loadItemsFromJSON();
+        Log.i("ItemsRepository","getItems");
+        LiveData<ArrayList<Item>> remoteData = mRemoteItemList.getItems();
+     //   LiveData<ArrayList<Item>> remoteData = loadItemsFromJSON();
         LiveData<ArrayList<Item>> localData = loadIndexLocally("index.json");
         mItems.addSource(remoteData,value->mItems.setValue(value));
         mItems.addSource(localData,value->mItems.setValue(value));
+
+
 
 //        if(mItems==null){
 //            mItems = loadItemsFromJSON();
@@ -131,12 +140,12 @@ public class ItemsRepository {
     }
 
     public LiveData<Item>getItem(int pItemIndex){
-        Log.i("Activity Lifecycle","loadItemsFromJSON, getItems");
+//        Log.i("Activity Lifecycle","loadItemsFromJSON, getItems");
         LiveData<Item>transformedItem = Transformations.switchMap(mItems,items->{
             MutableLiveData<Item> itemData = new MutableLiveData<>();
             Item item = items.get(pItemIndex);
             itemData.setValue(item);
-                Log.i("Activity Lifecycle","getItems ok");
+//                Log.i("Activity Lifecycle","getItems ok");
             if(!loadImageLocally(Uri.parse(item.getImageUrl()).getLastPathSegment(), itemData)) {
                                 Log.i("Activity Lifecycle","from internet ok");
                 loadImage(item.getImageUrl(), itemData);

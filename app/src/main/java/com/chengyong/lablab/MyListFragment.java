@@ -31,7 +31,7 @@ public class MyListFragment extends ListFragment {
 
             @Override
             public void onChanged(@NonNull final List<Item>items){
-                Log.i("Activity Lifecycle","MyLISTFragment on changed");
+//                Log.i("Activity Lifecycle","MyLISTFragment on changed");
                 ItemAdaptor itemAdaptor = new ItemAdaptor(getActivity(), mViewModel.getItems().getValue());
                 setListAdapter(itemAdaptor);
             }
