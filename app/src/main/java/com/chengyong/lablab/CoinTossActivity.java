@@ -14,7 +14,9 @@ import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GestureDetectorCompat;
 
+import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.util.Log;
@@ -27,7 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
-public class CoinTossActivity extends AppCompatActivity {
+public class CoinTossActivity extends AppCompatActivity implements GestureDetector.OnGestureListener {
 
 Random random = new Random();
 
@@ -37,6 +39,9 @@ private ImageView mHeads;
 private ImageView mTails;
 private Animator mFlipInAnimator;
 private Animator mFlipOutAnimator;
+private int mNumFlips;
+private int mAnimationCompleteCount;
+private GestureDetectorCompat mDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,12 @@ private Animator mFlipOutAnimator;
         mTails = findViewById(R.id.tails);
         mShowingHeads = false;
 
+        mNumFlips = random.nextInt(10);
+        mAnimationCompleteCount = 0;
+        mDetector = new GestureDetectorCompat(this, this);
+
+        addAnimationListeners();
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,27 +77,33 @@ private Animator mFlipOutAnimator;
         View.OnTouchListener touchListener = new View.OnTouchListener(){
             @Override
             public boolean onTouch(View v, MotionEvent event){
-                if(event.getActionMasked() == MotionEvent.ACTION_UP){
-                    flipCoin();
-                }
-                return true;
+//                if(event.getActionMasked() == MotionEvent.ACTION_UP){
+//                    flipCoin();
+//                }
+//                return true;
+                return mDetector.onTouchEvent(event);
             }
         };
         containerView.setOnTouchListener(touchListener);
 
+
         int numberOfTosses = retrievePreviousTosses();
-        if(numberOfTosses == -1){
-            numberOfTosses = 1;
-        }
-        else {
-            numberOfTosses++;
-        }
+
+        increaseTossCount();
+
         Toast.makeText(getApplicationContext(),"The conin has been tossed: "+numberOfTosses+" times.",Toast.LENGTH_LONG).show();
 
-        storePreviousTosses(numberOfTosses);
+        storePreviousTosses(mNumberOfTosses);
 
     }
-
+private void increaseTossCount(){
+    if(mNumberOfTosses == -1){
+        mNumberOfTosses = 1;
+    }
+    else {
+        mNumberOfTosses++;
+    }
+}
     @Override
     protected void onPause() {
         super.onPause();
@@ -189,5 +206,102 @@ private Animator mFlipOutAnimator;
 
     }
 
+
+    @Override
+    public boolean onDown(MotionEvent motionEvent) {
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent motionEvent) {
+        return false;
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+        return false;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent motionEvent) {
+
+    }
+
+    @Override
+    public boolean onFling(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+
+       if(v1<-5){
+           increaseTossCount();
+           flipCoin();
+       }
+
+        return false;
+    }
+
+    private void animationComplete(){
+        if(mAnimationCompleteCount == 2){
+            mAnimationCompleteCount = 0;
+            if(mNumFlips>0){
+                mNumFlips--;
+                flipCoin();
+            }
+            else
+            {
+                mNumFlips = random.nextInt(10);
+            }
+        }
+    }
+
+    private void addAnimationListeners(){
+        mFlipInAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+mAnimationCompleteCount++;
+animationComplete();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        });
+        mFlipOutAnimator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animator) {
+mAnimationCompleteCount++;
+animationComplete();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
+
+            }
+        });
+    }
 
 }

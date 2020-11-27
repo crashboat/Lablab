@@ -108,6 +108,7 @@ public class ItemsRepository {
         }
         catch(JSONException e){
             e.printStackTrace();
+            Log.i("VolleyItemListRetriever","two error:");
         }
         return items;
     }
@@ -252,7 +253,7 @@ public class ItemsRepository {
             loaded = true;
 
         }
-        catch (java.io.IOException e) {e.printStackTrace();}
+        catch (java.io.IOException e) {e.printStackTrace(); Log.i("VolleyItemListRetriever","threeerror:");}
 
 
     }
@@ -273,6 +274,7 @@ public class ItemsRepository {
 
         }catch(java.io.IOException e){
             e.printStackTrace();
+            Log.i("VolleyItemListRetriever","4rror:");
         }
     }
     }

@@ -39,6 +39,8 @@ public class ListItemFragment extends Fragment {
     }
 
     public ListItemFragment() {
+
+        Log.i("Activity Lifecycle", "ListItemFragment empty constructor");
         // Required empty public constructor
     }
 

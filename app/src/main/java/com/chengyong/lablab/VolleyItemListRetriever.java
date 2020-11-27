@@ -72,6 +72,7 @@ public class VolleyItemListRetriever implements VolleyItemImageResponse, VolleyJ
         }
         catch(JSONException e){
             e.printStackTrace();
+//            Log.i("VolleyItemListRetriever","onerror:");
         }
         return items;
     }
