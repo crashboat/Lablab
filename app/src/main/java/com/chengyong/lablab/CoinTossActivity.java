@@ -1,5 +1,7 @@
 package com.chengyong.lablab;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,9 +15,12 @@ import com.google.android.material.snackbar.Snackbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.view.MotionEvent;
 import android.view.View;
 import android.util.Log;
 import java.util.Random;
+
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import android.view.Menu;
@@ -26,6 +31,13 @@ public class CoinTossActivity extends AppCompatActivity {
 
 Random random = new Random();
 
+private int mNumberOfTosses;
+private boolean mShowingHeads;
+private ImageView mHeads;
+private ImageView mTails;
+private Animator mFlipInAnimator;
+private Animator mFlipOutAnimator;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +45,13 @@ Random random = new Random();
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Log.i("Activity Lifecycle","onCreate");
+
+        mFlipInAnimator = AnimatorInflater.loadAnimator(this,R.animator.flip_vertically_top_in);
+        mFlipOutAnimator = AnimatorInflater.loadAnimator(this, R.animator.flip_vertically_top_out);
+
+        mHeads = findViewById(R.id.heads);
+        mTails = findViewById(R.id.tails);
+        mShowingHeads = false;
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -42,6 +61,18 @@ Random random = new Random();
                         .setAction("Action", null).show();
             }
         });
+
+        View containerView = findViewById(R.id.container);
+        View.OnTouchListener touchListener = new View.OnTouchListener(){
+            @Override
+            public boolean onTouch(View v, MotionEvent event){
+                if(event.getActionMasked() == MotionEvent.ACTION_UP){
+                    flipCoin();
+                }
+                return true;
+            }
+        };
+        containerView.setOnTouchListener(touchListener);
 
         int numberOfTosses = retrievePreviousTosses();
         if(numberOfTosses == -1){
@@ -134,6 +165,28 @@ Random random = new Random();
                 "com.chengyong.lablab",Context.MODE_PRIVATE);
         previousTosses = sharedPreferences.getInt("numberOfTosses",01);
         return previousTosses;
+    }
+
+    private void flipCoin(){
+        String result = "Heads!";
+        if(mShowingHeads){
+            mShowingHeads = false;
+            mFlipInAnimator.setTarget(mTails);
+            mFlipOutAnimator.setTarget(mHeads);
+            result = "Tails";
+        }
+        else{
+            mShowingHeads = true;
+            mFlipInAnimator.setTarget(mHeads);
+            mFlipOutAnimator.setTarget(mTails);
+            result = "Heads!";
+        }
+        mFlipInAnimator.start();
+        mFlipOutAnimator.start();
+
+        TextView coinTossView = (TextView)findViewById(R.id.coinTossView1);
+        coinTossView.setText(result);
+
     }
 
 
